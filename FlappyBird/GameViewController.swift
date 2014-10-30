@@ -8,6 +8,8 @@
 
 import UIKit
 import SpriteKit
+import Social
+import Alamofire
 
 extension SKNode {
     class func unarchiveFromFile(file : NSString) -> SKNode? {
@@ -25,6 +27,7 @@ extension SKNode {
 }
 
 class GameViewController: UIViewController {
+    let API_KEY = "8AjFOOZOm1ZTK624FvS"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,17 +35,20 @@ class GameViewController: UIViewController {
         if let scene = GameScene.unarchiveFromFile("GameScene") as? GameScene {
             // Configure the view.
             let skView = self.view as SKView
-            skView.showsFPS = true
-            skView.showsNodeCount = true
+            // skView.showsFPS = true
+            // skView.showsNodeCount = true
             
             /* Sprite Kit applies additional optimizations to improve rendering performance */
             skView.ignoresSiblingOrder = true
             
             /* Set the scale mode to scale to fit the window */
             scene.scaleMode = .AspectFill
-            
+
+            scene.controller = self
             skView.presentScene(scene)
         }
+
+        self.initOpen()
     }
 
     override func shouldAutorotate() -> Bool {
@@ -61,5 +67,61 @@ class GameViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Release any cached data, images, etc that aren't in use.
     }
-    
+
+    func initOpen() {
+      Alamofire.request(.POST, "https://www.talkable.com/api/v2/origins", parameters: [
+        "api_key": self.API_KEY,
+        "site_slug": "krasnoukhov",
+        "type": "Event",
+        "data": [
+          "email": UIDevice.currentDevice().identifierForVendor.UUIDString + "@uuid.com",
+          "event_category": "app-open",
+          "event_number": UIDevice.currentDevice().identifierForVendor.UUIDString,
+          "campaign_tags": "ios"
+        ]
+      ])
+    }
+
+    func initShare() {
+      Alamofire.request(.POST, "https://www.talkable.com/api/v2/origins", parameters: [
+        "api_key": self.API_KEY,
+        "site_slug": "krasnoukhov",
+        "type": "Event",
+        "data": [
+          "email": UIDevice.currentDevice().identifierForVendor.UUIDString + "@uuid.com",
+          "event_category": "app-share",
+          "event_number": UIDevice.currentDevice().identifierForVendor.UUIDString,
+          "campaign_tags": "ios"
+        ]
+      ]).responseJSON { (_, _, JSON, _) in
+        if let object = JSON as? NSDictionary {
+          self.showShare(object.valueForKey("result")!.valueForKey("offer")! as NSDictionary)
+        }
+      }
+    }
+
+    func showShare(offer: NSDictionary) {
+      let shortCode = offer.valueForKey("short_url_code")! as NSString
+      let claimUrl = offer.valueForKey("claim_url")! as NSString
+      let tweetSheet = SLComposeViewController(forServiceType: SLServiceTypeTwitter)
+
+      tweetSheet.completionHandler = {
+        result in
+        switch result {
+        case SLComposeViewControllerResult.Cancelled:
+          break
+
+        case SLComposeViewControllerResult.Done:
+          Alamofire.request(.POST, "https://www.talkable.com/api/v2/offers/"+shortCode+"/shares", parameters: [
+            "api_key": self.API_KEY,
+            "site_slug": "krasnoukhov",
+            "channel": "twitter",
+          ])
+          break
+        }
+      }
+
+      tweetSheet.setInitialText("Share me! " + claimUrl)
+      self.presentViewController(tweetSheet, animated: false, completion: {})
+    }
 }

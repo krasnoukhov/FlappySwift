@@ -10,7 +10,8 @@ import SpriteKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate{
     let verticalPipeGap = 150.0
-    
+
+    var controller:GameViewController!
     var bird:SKSpriteNode!
     var skyColor:SKColor!
     var pipeTextureUp:SKTexture!
@@ -251,16 +252,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
                 bird.physicsBody?.collisionBitMask = worldCategory
                 bird.runAction(  SKAction.rotateByAngle(CGFloat(M_PI) * CGFloat(bird.position.y) * 0.01, duration:1), completion:{self.bird.speed = 0 })
                 
-                
-                // Flash background if contact is detected
-                self.removeActionForKey("flash")
-                self.runAction(SKAction.sequence([SKAction.repeatAction(SKAction.sequence([SKAction.runBlock({
-                    self.backgroundColor = SKColor(red: 1, green: 0, blue: 0, alpha: 1.0)
-                    }),SKAction.waitForDuration(NSTimeInterval(0.05)), SKAction.runBlock({
-                        self.backgroundColor = self.skyColor
-                        }), SKAction.waitForDuration(NSTimeInterval(0.05))]), count:4), SKAction.runBlock({
-                            self.canRestart = true
-                            })]), withKey: "flash")
+                self.canRestart = true
+                scoreLabelNode.text = "Tap to restart"
+
+                if(score > 0) {
+                  controller.initShare();
+                }
             }
         }
     }
