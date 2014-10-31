@@ -73,13 +73,21 @@ class GameViewController: UIViewController {
         "api_key": self.API_KEY,
         "site_slug": "krasnoukhov",
         "type": "Event",
+        "interpolations": true,
         "data": [
           "email": UIDevice.currentDevice().identifierForVendor.UUIDString + "@uuid.com",
           "event_category": "app-open",
           "event_number": UIDevice.currentDevice().identifierForVendor.UUIDString,
           "campaign_tags": "ios"
         ]
-      ])
+      ]).responseJSON { (_, _, JSON, _) in
+        if let object = JSON as? NSDictionary {
+          let referralsCount = object.valueForKey("result")!.valueForKey("interpolations")!.valueForKey("advocate_info")!.valueForKey("referrals_count")! as NSNumber
+          let alert = UIAlertController(title: "Referral", message: "Your referrals count is " + referralsCount.stringValue, preferredStyle: UIAlertControllerStyle.Alert)
+          alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.Default, handler: { (action) in }))
+          self.presentViewController(alert, animated: false, completion: {})
+        }
+      }
     }
 
     func initShare() {
