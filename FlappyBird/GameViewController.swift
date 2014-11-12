@@ -73,19 +73,16 @@ class GameViewController: UIViewController {
         "api_key": self.API_KEY,
         "site_slug": "krasnoukhov",
         "type": "Event",
-        "interpolations": true,
+        "interpolations": [],
         "data": [
-          "email": UIDevice.currentDevice().identifierForVendor.UUIDString + "@uuid.com",
-          "event_category": "app-open",
+          "event_category": "app-init",
           "event_number": UIDevice.currentDevice().identifierForVendor.UUIDString,
-          "campaign_tags": "ios"
+          "uuid": UIDevice.currentDevice().identifierForVendor.UUIDString,
+          "campaign_tags": "ios",
         ]
       ]).responseJSON { (_, _, JSON, _) in
         if let object = JSON as? NSDictionary {
-          let referralsCount = object.valueForKey("result")!.valueForKey("interpolations")!.valueForKey("advocate_info")!.valueForKey("referrals_count")! as NSNumber
-          let alert = UIAlertController(title: "Referral", message: "Your referrals count is " + referralsCount.stringValue, preferredStyle: UIAlertControllerStyle.Alert)
-          alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.Default, handler: { (action) in }))
-          self.presentViewController(alert, animated: false, completion: {})
+          println(object)
         }
       }
     }
@@ -96,13 +93,14 @@ class GameViewController: UIViewController {
         "site_slug": "krasnoukhov",
         "type": "Event",
         "data": [
-          "email": UIDevice.currentDevice().identifierForVendor.UUIDString + "@uuid.com",
-          "event_category": "app-share",
+          "event_category": "app-score",
           "event_number": UIDevice.currentDevice().identifierForVendor.UUIDString,
+          "uuid": UIDevice.currentDevice().identifierForVendor.UUIDString,
           "campaign_tags": "ios"
         ]
       ]).responseJSON { (_, _, JSON, _) in
         if let object = JSON as? NSDictionary {
+          println(object)
           self.showShare(object.valueForKey("result")!.valueForKey("offer")! as NSDictionary)
         }
       }
